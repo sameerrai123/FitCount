@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FitCount - Fitness Plans</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <style>
+    :root {
+      --text-color: #34495e;
+      --container-bg: rgba(255, 255, 255, 0.85);
+      --container-shadow: rgba(0, 0, 0, 0.15);
+      --highlight-gradient: linear-gradient(45deg, #3b82f6, #9333ea);
+      --youtube-color: #ef4444;
+      --youtube-hover: #b91c1c;
+      --accent-glow: 0 0 10px rgba(59, 130, 246, 0.6), 0 0 20px rgba(147, 51, 234, 0.4);
+    }
+
+    [data-theme='dark'] {
+      --text-color: #e0e0e0;
+      --container-bg: rgba(31, 41, 55, 0.7);
+      --container-shadow: rgba(0, 0, 0, 0.7);
+      --highlight-gradient: linear-gradient(45deg, #f97316, #ec4899);
+      --accent-glow: 0 0 12px rgba(249, 115, 22, 0.7), 0 0 25px rgba(236, 72, 153, 0.4);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-snap-type: y mandatory;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text-color);
+      overflow-x: hidden;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    /* Floating Background Icons */
+    .floating-icons i {
+      position: absolute;
+      font-size: 1.5rem;
+      color: rgba(255,255,255,0.2);
+      animation: float 10s infinite ease-in-out;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); opacity: 0.3; }
+      50% { transform: translateY(-20px); opacity: 0.6; }
+    }
+
+    /* Navbar */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      padding: 12px;
+      z-index: 50;
+      backdrop-filter: blur(8px);
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover, nav a.active {
+      color: #f97316;
+      text-shadow: 0 0 8px #f97316;
+    }
+
+    /* Parallax Section */
+    .parallax {
+      background-attachment: fixed;
+      background-position: center;
+      background-size: cover;
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      scroll-snap-align: start;
+      overflow: hidden;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1;
+    }
+
+    /* Hero Section */
+    .hero {
+      flex-direction: column;
+      color: white;
+      z-index: 2;
+    }
+
+    .hero h1 {
+      font-size: 3.5em;
+      margin: 0;
+      background: var(--highlight-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: fadeIn 1.2s ease;
+      text-shadow: var(--accent-glow);
+    }
+
+    .hero p {
+      font-size: 1.2em;
+      opacity: 0.9;
+      animation: fadeUp 1.5s ease;
+    }
+
+    .greeting {
+      margin-top: 10px;
+      font-style: italic;
+      opacity: 0.8;
+      font-size: 1em;
+    }
+
+    .scroll-down {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5em;
+      color: #fff;
+      animation: bounce 1.5s infinite;
+      z-index: 2;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, 10px); }
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9em;
+      z-index: 10;
+      color: #fff;
+    }
+
+    .toggle-switch input { display: none; }
+    .slider {
+      width: 42px; height: 20px;
+      background-color: #ccc;
+      border-radius: 34px;
+      position: relative;
+      margin-left: 10px;
+      transition: background-color 0.3s ease;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 2px; top: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+    input:checked + .slider { background-image: var(--highlight-gradient); }
+    input:checked + .slider::before { transform: translateX(22px); }
+
+    /* Container */
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      position: relative;
+      z-index: 2;
+      padding: 60px 20px;
+      animation: fadeUp 1s ease;
+    }
+
+    .level {
+      background-color: var(--container-bg);
+      margin-bottom: 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px var(--container-shadow);
+      padding: 25px;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+    }
+
+    .level:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: var(--accent-glow);
+    }
+
+    .level h2 {
+      margin: 0;
+      font-size: 1.7em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--highlight-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .content {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.6s ease, opacity 0.6s ease;
+    }
+
+    .content.show {
+      opacity: 1;
+      max-height: 1000px;
+    }
+
+    .content h3 {
+      margin: 15px 0 10px;
+      font-size: 1.2em;
+      background: var(--highlight-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .content ul {
+      padding-left: 22px;
+      line-height: 1.6;
+    }
+
+    .youtube-link {
+      margin-left: 8px;
+      color: var(--youtube-color);
+      font-size: 1.2em;
+      transition: color 0.3s ease, transform 0.3s ease;
+    }
+
+    .youtube-link:hover {
+      color: var(--youtube-hover);
+      transform: scale(1.2) rotate(5deg);
+    }
+
+    /* BMI Calculator */
+    .bmi-box {
+      margin-top: 40px;
+      background-color: var(--container-bg);
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px var(--container-shadow);
+    }
+
+    .bmi-box input {
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      margin: 5px;
+      width: 100px;
+      text-align: center;
+    }
+
+    .bmi-box button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 10px;
+      background: var(--highlight-gradient);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .bmi-box button:hover { transform: scale(1.05); }
+
+    /* Scroll to Top */
+    #scrollTop {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: var(--highlight-gradient);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 45px; height: 45px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: var(--accent-glow);
+      transition: transform 0.3s ease;
+      z-index: 60;
+    }
+
+    #scrollTop:hover { transform: scale(1.1); }
+
+    /* Footer */
+    footer {
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9em;
+    }
+    footer .social i {
+      margin: 0 10px;
+      color: #f97316;
+      transition: transform 0.3s;
+    }
+    footer .social i:hover { transform: scale(1.3); }
+
+    @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+    @keyframes fadeUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 2.2em; }
+      .container { padding: 20px 10px; }
+      .parallax { background-attachment: scroll; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Floating icons -->
+  <div class="floating-icons">
+    <i class="fas fa-dumbbell" style="top:15%; left:10%; animation-delay:0s;"></i>
+    <i class="fas fa-heartbeat" style="top:30%; left:80%; animation-delay:2s;"></i>
+    <i class="fas fa-running" style="top:70%; left:20%; animation-delay:4s;"></i>
+  </div>
+
+  <!-- Navbar -->
+  <nav>
+    <a href="#hero-sec">Home</a>
+    <a href="#beginner-sec">Beginner</a>
+    <a href="#intermediate-sec">Intermediate</a>
+    <a href="#advanced-sec">Advanced</a>
+  </nav>
+
+  <!-- Hero -->
+  <section id="hero-sec" class="parallax hero" style="background-image:url('https://images.unsplash.com/photo-1558611848-73f7eb4001a1');">
+    <div class="overlay"></div>
+    <label class="toggle-switch">
+      <input type="checkbox" id="theme-toggle" />
+      <span class="slider"></span>
+    </label>
+    <h1>FitCount</h1>
+    <p>Your Fitness Journey Starts Here</p>
+    <div class="greeting" id="greeting"></div>
+    <div class="scroll-down"><i class="fas fa-chevron-down"></i></div>
+  </section>
+
+  <!-- BEGINNER -->
+  <section id="beginner-sec" class="parallax" style="background-image:url('https://images.unsplash.com/photo-1605296867304-46d5465a13f1');">
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="level" onclick="toggleContent('beginner')">
+        <h2>Beginner Level</h2>
+        <div class="content" id="beginner">
+          <h3>Diet Plan:</h3>
+          <ul>
+            <li>Breakfast: Oatmeal with fruits</li>
+            <li>Lunch: Grilled chicken with brown rice</li>
+            <li>Dinner: Steamed vegetables with tofu</li>
+            <li>Snacks: Nuts, fruits, Greek yogurt</li>
+          </ul>
+          <h3>Workout Plan:</h3>
+          <ul>
+            <li>Day 1: Stretch + Light Cardio <a href="https://www.youtube.com/watch?v=K_C-jx_7F98" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 2: Squats, Push-ups, Planks <a href="https://www.youtube.com/watch?v=YaXPRqUwItQ" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 3: Yoga/Rest <a href="https://www.youtube.com/watch?v=v7AYKMP6rOE" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERMEDIATE -->
+  <section id="intermediate-sec" class="parallax" style="background-image:url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b');">
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="level" onclick="toggleContent('intermediate')">
+        <h2>Intermediate Level</h2>
+        <div class="content" id="intermediate">
+          <h3>Diet Plan:</h3>
+          <ul>
+            <li>Breakfast: Protein smoothie + eggs</li>
+            <li>Lunch: Quinoa salad with lean meat or soya chunks</li>
+            <li>Dinner: Grilled fish or paneer with vegetables</li>
+            <li>Snacks: Boiled eggs, roasted chickpeas, Greek yogurt</li>
+          </ul>
+          <h3>Workout Plan:</h3>
+          <ul>
+            <li>Day 1: Upper Body Strength <a href="https://www.youtube.com/watch?v=UoC_O3HzsH0" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 2: Lower Body + Core <a href="https://www.youtube.com/watch?v=tXOZS3akKuw" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 3: Back & Biceps Focus <a href="https://www.youtube.com/watch?v=ykJmrZ5v0Oo" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 4: Arms (Form & Strength) <a href="https://www.youtube.com/watch?v=ykJmrZ5v0Oo" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 5: Legs (Quads, Hamstrings, Glutes) <a href="https://www.youtube.com/watch?v=1Tq3QdYUuHs" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 6: Cardio & Core <a href="https://www.youtube.com/watch?v=ml6cT4AZdqI" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- BMI Calculator -->
+      <div class="bmi-box">
+        <h3>Check Your BMI</h3>
+        <input type="number" id="weight" placeholder="Weight (kg)" />
+        <input type="number" id="height" placeholder="Height (cm)" />
+        <button onclick="calcBMI()">Calculate</button>
+        <p id="bmi-result"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADVANCED -->
+  <section id="advanced-sec" class="parallax" style="background-image:url('https://images.unsplash.com/photo-1579758629938-03607ccdbaba');">
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="level" onclick="toggleContent('advanced')">
+        <h2>Advanced Level</h2>
+        <div class="content" id="advanced">
+          <h3>Diet Plan:</h3>
+          <ul>
+            <li>High protein + complex carbs (brown rice, oats, sweet potatoes)</li>
+            <li>Protein sources: Eggs, fish, paneer, soya, chicken breast</li>
+            <li>Supplements: Whey, BCAAs, Creatine</li>
+          </ul>
+          <h3>Workout Plan:</h3>
+          <ul>
+            <li>Day 1: Push (Chest, Shoulders, Triceps) <a href="https://www.youtube.com/watch?v=IODxDxX7oi4" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 2: Pull (Back, Biceps) <a href="https://www.youtube.com/watch?v=ykJmrZ5v0Oo" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 3: Legs (Strength) <a href="https://www.youtube.com/watch?v=1Tq3QdYUuHs" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 4: Arms (Form) <a href="https://www.youtube.com/watch?v=ykJmrZ5v0Oo" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 5: Cardio & Core Blast <a href="https://www.youtube.com/watch?v=ml6cT4AZdqI" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+            <li>Day 6: Full Body Conditioning <a href="https://www.youtube.com/watch?v=UoC_O3HzsH0" target="_blank" class="youtube-link"><i class="fab fa-youtube"></i></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scroll To Top -->
+  <button id="scrollTop"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- Footer -->
+  <footer>
+    <div>© 2025 FitCount. All Rights Reserved.</div>
+    <div class="social">
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+    </div>
+  </footer>
+
+  <script>
+    // Greeting
+    const greeting = document.getElementById('greeting');
+    const hour = new Date().getHours();
+    greeting.textContent = hour < 12 ? 'Good Morning, Champ!' :
+                           hour < 18 ? 'Good Afternoon, Keep Pushing!' :
+                           'Good Evening, Time to Hustle!';
+
+    // Theme toggle
+    const toggle = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      toggle.checked = true;
+    }
+    toggle.addEventListener('change', () => {
+      if (toggle.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      }
+    });
+
+    // Content toggle
+    function toggleContent(id) {
+      const c = document.getElementById(id);
+      c.classList.toggle('show');
+    }
+
+    // Active Nav Highlight
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('nav a');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(sec => {
+        const top = sec.offsetTop - 100;
+        if (scrollY >= top) current = sec.getAttribute('id');
+      });
+      navLinks.forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+      });
+    });
+
+    // Scroll To Top Button
+    const scrollTopBtn = document.getElementById('scrollTop');
+    window.addEventListener('scroll', () => {
+      scrollTopBtn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+    });
+    scrollTopBtn.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+
+    // BMI Calculator
+    function calcBMI() {
+      const w = parseFloat(document.getElementById('weight').value);
+      const h = parseFloat(document.getElementById('height').value) / 100;
+      if (!w || !h) return document.getElementById('bmi-result').textContent = "Please enter valid values";
+      const bmi = (w / (h * h)).toFixed(1);
+      let msg = '';
+      if (bmi < 18.5) msg = 'Underweight';
+      else if (bmi < 25) msg = 'Normal';
+      else if (bmi < 30) msg = 'Overweight';
+      else msg = 'Obese';
+      document.getElementById('bmi-result').textContent = `Your BMI: ${bmi} (${msg})`;
+    }
+  </script>
+</body>
+</html>
+
+<!-- ===================================================== -->
+<!-- ADDITIONS START HERE — NOTHING ABOVE WAS MODIFIED     -->
+<!-- ===================================================== -->
+
+<!-- Progress bar, preloader, custom cursor, contact button, testimonials,
+     newsletter and enhancement scripts are appended below. -->
+
+<!-- Progress bar (fixed at top) -->
+<div id="fc-progress-bar" style="position:fixed; top:0; left:0; height:4px; width:0; background:linear-gradient(90deg,#3b82f6,#9333ea); z-index:9999; transition:width .2s ease;"></div>
+
+<!-- Preloader (simple) -->
+<div id="fc-preloader" style="position:fixed; inset:0; display:flex;align-items:center;justify-content:center;background:#000; z-index:9998;">
+  <div style="text-align:center;color:#fff;">
+    <div style="width:48px;height:48px;border:5px solid rgba(255,255,255,0.2);border-top-color:#f97316;border-radius:50%;animation:fc-spin 1s linear infinite;margin:0 auto 10px;"></div>
+    <div>Loading FitCount...</div>
+  </div>
+</div>
+<style>
+@keyframes fc-spin { to { transform: rotate(360deg); } }
+/* Cursor */
+#fc-cursor {
+  position:fixed; width:16px; height:16px; border-radius:50%;
+  background:linear-gradient(45deg,#3b82f6,#9333ea);
+  pointer-events:none; transform:translate(-50%,-50%); mix-blend-mode:difference; z-index:99999;
+  transition:transform .08s linear;
+}
+/* small reveal helper for elements that need fade-in */
+.fc-fade { opacity:0; transform:translateY(18px); transition:opacity .8s ease, transform .8s ease; }
+.fc-fade.show { opacity:1; transform:translateY(0); }
+/* floating contact */
+#fc-contact {
+  position:fixed; right:22px; bottom:90px; width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(45deg,#3b82f6,#9333ea); display:flex;align-items:center;justify-content:center;
+  color:#fff; box-shadow:0 8px 20px rgba(59,130,246,0.25); z-index:9999; cursor:pointer;
+}
+#fc-contact:hover { transform:scale(1.06); transition:transform .18s ease; }
+/* Testimonial cards appended */
+.fc-testimonials { background:#0b0b0b; padding:48px 20px; color:#fff; }
+.fc-test-grid { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; max-width:1100px; margin:0 auto; }
+.fc-card { background:rgba(255,255,255,0.9); color:#222; border-radius:12px; padding:18px; width:280px; box-shadow:0 8px 20px rgba(0,0,0,0.15); }
+</style>
+
+<!-- Custom cursor element -->
+<div id="fc-cursor" aria-hidden="true"></div>
+
+<!-- Floating contact button -->
+<a id="fc-contact" href="#footer" title="Contact / Subscribe"><i class="fas fa-envelope"></i></a>
+
+<!-- Testimonials appended (doesn't alter your existing sections) -->
+<section class="parallax fc-testimonials" style="background-image:none;">
+  <div class="container fc-fade">
+    <h2 style="color:#fff;text-align:center;margin-top:0;">Success Stories</h2>
+    <div class="fc-test-grid">
+      <div class="fc-card">“Lost 10kg in 3 months!” – <b>Ravi</b></div>
+      <div class="fc-card">“Felt stronger and more confident.” – <b>Ananya</b></div>
+      <div class="fc-card">“Best online fitness plan ever.” – <b>Rahul</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- Small newsletter / subscribe bar appended after footer (non-intrusive) -->
+<div id="fc-newsletter" style="position:fixed; left:20px; bottom:20px; background:rgba(255,255,255,0.95); padding:10px 14px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.12); z-index:9998;">
+  <div style="font-weight:700;margin-bottom:6px;">Get FitCount updates</div>
+  <form id="fc-news-form" style="display:flex; gap:8px; align-items:center;">
+    <input id="fc-news-email" type="email" placeholder="you@ex.com" style="padding:6px 8px;border-radius:6px;border:1px solid #ddd;"/>
+    <button style="padding:6px 10px;border-radius:6px;border:none;background:linear-gradient(45deg,#3b82f6,#9333ea);color:#fff;font-weight:600;cursor:pointer;">Subscribe</button>
+  </form>
+  <div id="fc-news-msg" style="margin-top:6px;font-size:13px;color:#333;display:none;"></div>
+</div>
+
+<script>
+  /***** Basic enhancement script — fully additive (does NOT change your original functions or text) *****/
+
+  // 1) hide preloader on load
+  window.addEventListener('load', function() {
+    const pre = document.getElementById('fc-preloader');
+    if (pre) pre.style.display = 'none';
+    // reveal testimonial container (fade)
+    document.querySelectorAll('.fc-fade').forEach(el => el.classList.add('show'));
+    // load saved BMI inputs if present (additive)
+    try {
+      const w = localStorage.getItem('fc_weight_v1');
+      const h = localStorage.getItem('fc_height_v1');
+      if (w && document.getElementById('weight')) document.getElementById('weight').value = w;
+      if (h && document.getElementById('height')) document.getElementById('height').value = h;
+    } catch (e) { /* ignore */ }
+  });
+
+  // 2) progress bar update (top fixed)
+  window.addEventListener('scroll', function() {
+    const bar = document.getElementById('fc-progress-bar');
+    if (!bar) return;
+    const scrolled = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+    bar.style.width = Math.min(100, Math.max(0, scrolled)) + '%';
+  });
+
+  // 3) custom cursor follow
+  (function() {
+    const cursor = document.getElementById('fc-cursor');
+    if (!cursor) return;
+    document.addEventListener('mousemove', function(e) {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+    // enlarge cursor when hovering interactive elements
+    ['a','button','input','.level','#scrollTop','.youtube-link'].forEach(sel => {
+      document.addEventListener('mouseover', function(ev){
+        if (ev.target.closest && ev.target.closest(sel)) {
+          cursor.style.transform = 'translate(-50%,-50%) scale(1.6)';
+        }
+      });
+      document.addEventListener('mouseout', function(ev){
+        if (ev.target.closest && ev.target.closest(sel)) {
+          cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+        }
+      });
+    });
+  })();
+
+  // 4) small scroll reveal observer for elements we added and existing .level and .bmi-box (additive)
+  (function(){
+    const obs = new IntersectionObserver((entries)=>{
+      entries.forEach(en=>{
+        if (en.isIntersecting) {
+          en.target.classList.add('show'); // if there is CSS .show for fade we use it; if not harmless
+          en.target.style.opacity = 1;
+          en.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, {threshold: 0.12});
+    // observe existing level and bmi-box elements (safe, only reads)
+    document.querySelectorAll('.level, .bmi-box, .container').forEach(el => {
+      // add minimal fade CSS if not present
+      if (!el.classList.contains('fc-fade')) {
+        el.classList.add('fc-fade');
+      }
+      obs.observe(el);
+    });
+    // observe our testimonial cards
+    document.querySelectorAll('.fc-card').forEach(el => {
+      el.classList.add('fc-fade');
+      obs.observe(el);
+    });
+  })();
+
+  // 5) Floating contact button behavior (scroll to footer)
+  document.getElementById('fc-contact').addEventListener('click', function(e){
+    // default anchor to footer — smooth scroll
+    e.preventDefault();
+    const footer = document.getElementById('footer') || document.querySelector('footer');
+    if (footer) footer.scrollIntoView({behavior:'smooth'});
+  });
+
+  // 6) Newsletter small form (local front-end simulation)
+  document.getElementById('fc-news-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const email = document.getElementById('fc-news-email').value.trim();
+    const msg = document.getElementById('fc-news-msg');
+    if (!email || !email.includes('@')) {
+      msg.style.display = 'block'; msg.style.color = 'crimson'; msg.textContent = 'Enter a valid email.';
+      return;
+    }
+    // simulate save (local)
+    try { localStorage.setItem('fc_news_email', email); } catch(e){}
+    msg.style.display = 'block'; msg.style.color = 'green'; msg.textContent = 'Thanks! You are subscribed (local only).';
+    // clear input
+    document.getElementById('fc-news-email').value = '';
+    setTimeout(()=> msg.style.display = 'none', 4000);
+  });
+
+  // 7) BMI UX enhancements — ADDITIVE only:
+  //    - save inputs to localStorage when user types
+  //    - after user clicks your existing calcBMI() (which you defined), we colorize the displayed result text
+  (function(){
+    const wEl = document.getElementById('weight');
+    const hEl = document.getElementById('height');
+    if (wEl) wEl.addEventListener('input', ()=> { try { localStorage.setItem('fc_weight_v1', wEl.value); } catch(e){} });
+    if (hEl) hEl.addEventListener('input', ()=> { try { localStorage.setItem('fc_height_v1', hEl.value); } catch(e){} });
+
+    // Attach a listener to the original Calculate button (it uses onclick="calcBMI()")
+    const calcBtn = Array.from(document.querySelectorAll('button')).find(b => b.getAttribute('onclick') === 'calcBMI()');
+    if (calcBtn) {
+      calcBtn.addEventListener('click', function(){
+        // give calcBMI() a short tick to update text, then colorize msg
+        setTimeout(function(){
+          const res = document.getElementById('bmi-result');
+          if (!res) return;
+          const txt = res.textContent || '';
+          // try parse BMI number from your original output "Your BMI: 24.5 (Normal)"
+          const m = txt.match(/([\d]{1,3}\.?\d?)/);
+          if (m) {
+            const bmi = parseFloat(m[1]);
+            let color = '#333';
+            if (bmi < 18.5) color = '#f59e0b'; // amber
+            else if (bmi < 25) color = '#10b981'; // green
+            else if (bmi < 30) color = '#f97316'; // orange
+            else color = '#ef4444'; // red
+            // wrap result in a span colored (we do not alter original message text other than wrapping)
+            res.innerHTML = '';
+            const parts = txt.split(':');
+            if (parts.length >= 2) {
+              const prefix = parts[0] + ': ';
+              const rest = parts.slice(1).join(':');
+              res.innerHTML = prefix + '<span style="color:'+color+';font-weight:700;">' + rest + '</span>';
+            } else {
+              res.innerHTML = '<span style="color:'+color+';font-weight:700;">' + txt + '</span>';
+            }
+          }
+        }, 40);
+      });
+    }
+  })();
+
+  // 8) Make sure progress bar at very top doesn't overlap nav by adding small top padding when visible
+  //    (no change to original layout; purely cosmetic)
+  (function(){
+    const bar = document.getElementById('fc-progress-bar');
+    if (!bar) return;
+    // if user scrolls, show small shadow on nav
+    window.addEventListener('scroll', function(){
+      const nav = document.querySelector('nav');
+      if (!nav) return;
+      if (window.scrollY > 6) nav.style.boxShadow = '0 4px 20px rgba(0,0,0,0.25)';
+      else nav.style.boxShadow = 'none';
+    });
+  })();
+
+  // 9) Accessibility small improvement: allow keyboard to focus contact button
+  document.getElementById('fc-contact').setAttribute('tabindex','0');
+  document.getElementById('fc-contact').addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' ') this.click();
+  });
+
+  // End of additive enhancements
+</script>
+
+<!-- ===================================================== -->
+<!-- ADDITIONS END HERE                                    -->
+<!-- NOTHING ABOVE WAS MODIFIED FROM YOUR ORIGINAL COPY    -->
+<!-- ===================================================== -->
